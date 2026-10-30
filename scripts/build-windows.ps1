@@ -29,7 +29,7 @@ Run 'cmake' @('-S',$OpenCVSource,'-B',$OpenCVBuild,'-G','Visual Studio 17 2022',
     '-DCMAKE_POLICY_VERSION_MINIMUM=3.5')
 Run 'cmake' @('--build',$OpenCVBuild,'--config','Release','--parallel',"$Jobs")
 Run 'cmake' @('--install',$OpenCVBuild,'--config','Release')
-Run 'cmake' @('--preset','windows-x64',"-DOpenCV_DIR=$OpenCVInstall",'-DBUILD_TESTING=ON')
+Run 'cmake' @('--preset','windows-x64',"-DOpenCV_DIR=$OpenCVInstall",'-DOpenCV_STATIC=ON','-DBUILD_TESTING=ON')
 Run 'cmake' @('--build','build_x64','--config','Release','--parallel',"$Jobs")
 Run 'ctest' @('--test-dir','build_x64','-C','Release','--output-on-failure')
 $Package = Join-Path $Root 'package'
