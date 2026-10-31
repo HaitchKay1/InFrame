@@ -5,7 +5,6 @@
 #include <util/platform.h>
 #include "detector.hpp"
 #include <atomic>
-#include <cstring>
 #include <memory>
 #include <mutex>
 
@@ -170,12 +169,10 @@ void *create(obs_data_t *d,obs_source_t *source) {
     try { f->detector=std::make_unique<inframe::Detector>(path?path:""); }
     catch(const std::exception &e) {blog(LOG_ERROR,"[InFrame] %s",e.what()); bfree(path); destroy(f); return nullptr;}
     bfree(path); update(f,d);
-    // Retain saved hotkey bindings for scene collections created before the rename.
-    const bool legacy=std::strcmp(obs_source_get_id(source),"steadyframe_filter")==0;
-    f->freezeKey=obs_hotkey_register_source(source,legacy?"steadyframe.freeze":"inframe.freeze","InFrame: Toggle freeze framing",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){
+    f->freezeKey=obs_hotkey_register_source(source,"inframe.freeze","InFrame: Toggle freeze framing",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){
         auto *f=static_cast<Filter*>(data); if(pressed) f->freezeHotkey=!f->freezeHotkey.load();
     },f);
-    f->resetKey=obs_hotkey_register_source(source,legacy?"steadyframe.reacquire":"inframe.reacquire","InFrame: Find me again",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){if(pressed) static_cast<Filter*>(data)->reset=true;},f);
+    f->resetKey=obs_hotkey_register_source(source,"inframe.reacquire","InFrame: Find me again",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){if(pressed) static_cast<Filter*>(data)->reset=true;},f);
     return f;
 }
 void tick(void *data,float) {static_cast<Filter*>(data)->rendered=false;}
@@ -270,10 +267,6 @@ bool obs_module_load(void) {
     info.output_flags=OBS_SOURCE_VIDEO; info.get_name=name; info.create=create; info.destroy=destroy;
     info.update=update; info.get_defaults=defaults; info.get_properties=properties;
     info.video_tick=tick; info.video_render=render;
-    obs_register_source(&info);
-    // Load existing saved filters without exposing a second entry in the Add Filter menu.
-    info.id="steadyframe_filter";
-    info.output_flags|=OBS_SOURCE_CAP_OBSOLETE;
     obs_register_source(&info);
     return true;
 }

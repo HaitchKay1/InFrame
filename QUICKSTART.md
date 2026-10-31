@@ -13,10 +13,6 @@ InFrame is a native OBS effect filter that crops and smoothly follows faces. Bal
 
 The source ZIP does not contain a Windows DLL. See README.md for the Windows build workflow.
 
-## Upgrading from SteadyFrame
-
-Close OBS and run the InFrame installer. It backs up the old plugin outside OBS's plugin folder before replacing it, preventing both modules from loading together. Existing saved filters and their hotkey bindings remain supported through a hidden compatibility registration. New filters appear as **InFrame — Face Tracking**. An existing filter instance may retain its old user-editable name; rename that instance in OBS if desired. Portable/manual installations must also remove the old plugin binary before loading InFrame.
-
 ## Useful controls
 
 | Control | What it does |

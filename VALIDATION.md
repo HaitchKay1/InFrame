@@ -23,7 +23,3 @@
 - HDR processing: intentionally bypassed in this alpha.
 
 The Windows GitHub Actions workflow is supplied but has not been run. Its build and packaging scripts are an intended path to a Windows artifact, not evidence that a Windows artifact already exists.
-
-## InFrame rename — 2026-10-31
-
-Renamed the UI, native module, CMake option, namespace, installer, build artifacts, and documentation. Legacy serialized source/hotkey IDs remain only for saved-scene compatibility. The Windows installer moves the old module outside OBS plugin discovery and retains a backup. A successful Windows build of the previous version was reported by the user; the renamed build is checked separately through CI.

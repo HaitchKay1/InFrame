@@ -6,10 +6,6 @@ A free, open-source face-following effect filter for OBS Studio. Native C++ filt
 
 **Status: 0.1.0 development alpha.** The source package is not an installable Windows plugin. A Windows build workflow and installer scripts are provided, and the previous Windows build completed successfully in GitHub Actions. The renamed build and live-camera behavior still need verification. See VALIDATION.md for exactly what was tested. Do not interpret the included feature set as a performance or quality victory over StreamFX.
 
-## Upgrading from SteadyFrame
-
-Close OBS and run the InFrame installer. It backs up the old plugin outside OBS's plugin folder before replacing it, preventing both modules from loading together. Existing saved filters and their hotkey bindings remain supported through a hidden compatibility registration. New filters appear as **InFrame — Face Tracking**. An existing filter instance may retain its old user-editable name; rename that instance in OBS if desired. Portable/manual installations must also remove the old plugin binary before loading InFrame.
-
 ## Implemented
 
 - OBS camera-source Effect Filter registration, no virtual webcam or separate camera capture.
