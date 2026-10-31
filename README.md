@@ -1,5 +1,7 @@
 # SteadyFrame
 
+> SteadyFrame was made with AI (OpenAI ChatGPT/Codex), with human direction and testing. The plugin code, build scripts, and documentation were generated and refined through AI-assisted development.
+
 A free, open-source face-following effect filter for OBS Studio. Native C++ filter, YuNet face detection on a worker thread, GPU cropping through OBS, and plain-language filter controls.
 
 **Status: 0.1.0 development alpha.** The source package is not an installable Windows plugin. A Windows build workflow and installer scripts are provided, but a Windows build and real-camera test have not been executed for this delivery. See VALIDATION.md for exactly what was tested. Do not interpret the included feature set as a performance or quality victory over StreamFX.
