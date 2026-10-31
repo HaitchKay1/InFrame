@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'release: publish InFrame 0.1.0'
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'release: publish InFrame 0.1.0'
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ github.token }}
