@@ -2,7 +2,7 @@
 #include "detector.hpp"
 #include <opencv2/imgproc.hpp>
 #include <chrono>
-namespace sf {
+namespace inframe {
 Detector::~Detector() {
     {std::lock_guard<std::mutex> lock(mutex_); stopping_=true;}
     wake_.notify_one();

@@ -1,10 +1,14 @@
-# SteadyFrame
+# InFrame
 
-> SteadyFrame was made with AI (OpenAI ChatGPT/Codex), with human direction and testing. The plugin code, build scripts, and documentation were generated and refined through AI-assisted development.
+> InFrame was made with AI (OpenAI ChatGPT/Codex), with human direction and testing. The plugin code, build scripts, and documentation were generated and refined through AI-assisted development.
 
 A free, open-source face-following effect filter for OBS Studio. Native C++ filter, YuNet face detection on a worker thread, GPU cropping through OBS, and plain-language filter controls.
 
-**Status: 0.1.0 development alpha.** The source package is not an installable Windows plugin. A Windows build workflow and installer scripts are provided, but a Windows build and real-camera test have not been executed for this delivery. See VALIDATION.md for exactly what was tested. Do not interpret the included feature set as a performance or quality victory over StreamFX.
+**Status: 0.1.0 development alpha.** The source package is not an installable Windows plugin. A Windows build workflow and installer scripts are provided, and the previous Windows build completed successfully in GitHub Actions. The renamed build and live-camera behavior still need verification. See VALIDATION.md for exactly what was tested. Do not interpret the included feature set as a performance or quality victory over StreamFX.
+
+## Upgrading from SteadyFrame
+
+Close OBS and run the InFrame installer. It backs up the old plugin outside OBS's plugin folder before replacing it, preventing both modules from loading together. Existing saved filters and their hotkey bindings remain supported through a hidden compatibility registration. New filters appear as **InFrame — Face Tracking**. An existing filter instance may retain its old user-editable name; rename that instance in OBS if desired. Portable/manual installations must also remove the old plugin binary before loading InFrame.
 
 ## Implemented
 
@@ -29,9 +33,9 @@ This reduces proprietary dependencies and makes the first build easier to distri
 ## Build a Windows package using GitHub
 
 1. Create a GitHub repository and upload the **contents** of this folder, including `.github/workflows/build.yml`, at the repository root. A git push preserves the dot-directory reliably; uploading only visible files may omit it.
-2. Open the repository's **Actions** tab and run **Build SteadyFrame**, or let the push trigger it.
-3. After a successful Windows job, download the **SteadyFrame-Windows-x64** artifact.
-4. Extract the artifact wrapper, then extract `SteadyFrame-0.1.0-Windows-x64.zip` inside it.
+2. Open the repository's **Actions** tab and run **Build InFrame**, or let the push trigger it.
+3. After a successful Windows job, download the **InFrame-Windows-x64** artifact.
+4. Extract the artifact wrapper, then extract `InFrame-0.1.0-Windows-x64.zip` inside it.
 5. Follow QUICKSTART.md. That built ZIP contains the DLL, model, effect, licenses, and installer.
 
 The workflow builds dependencies from pinned versions and tests the detector and framing controller. The initial build can take a while; subsequent runs cache dependencies. It uploads an artifact, not a public release. GitHub availability, quotas, and build-machine updates can affect execution.
@@ -44,7 +48,7 @@ Install Visual Studio 2022's **Desktop development with C++** workload and Windo
 powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
 ```
 
-The script builds OpenCV 4.12.0 as static libraries with the dynamic Microsoft runtime, uses the official OBS plugin template's dependency bootstrap, builds Release, runs tests, and produces `SteadyFrame-0.1.0-Windows-x64.zip`. The template currently pins the OBS 31.1.1 development baseline. Newer OBS releases need compatibility testing; no plugin can promise immunity to every future OBS change.
+The script builds OpenCV 4.12.0 as static libraries with the dynamic Microsoft runtime, uses the official OBS plugin template's dependency bootstrap, builds Release, runs tests, and produces `InFrame-0.1.0-Windows-x64.zip`. The template currently pins the OBS 31.1.1 development baseline. Newer OBS releases need compatibility testing; no plugin can promise immunity to every future OBS change.
 
 ## Linux development
 
@@ -61,7 +65,7 @@ No Qt or OBS frontend API is used. The Windows installer is the intended packagi
 To test only camera-motion math without OBS or OpenCV:
 
 ```sh
-cmake -S . -B build-core -DSTEADYFRAME_CORE_ONLY=ON
+cmake -S . -B build-core -DINFRAME_CORE_ONLY=ON
 cmake --build build-core
 ctest --test-dir build-core --output-on-failure
 ```
@@ -92,4 +96,4 @@ This alpha supports SDR and bypasses processing in HDR paths. There is one detec
 - YuNet model and license: https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet
 - NVIDIA Maxine Windows requirements: https://docs.nvidia.com/maxine/ar/latest/WindowsARSDK/Windows.html
 
-New SteadyFrame code is GPL-3.0-or-later. See LICENSE and THIRD-PARTY.md. No NVIDIA runtime or StreamFX source is included.
+New InFrame code is GPL-3.0-or-later. See LICENSE and THIRD-PARTY.md. No NVIDIA runtime or StreamFX source is included.

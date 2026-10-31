@@ -6,7 +6,7 @@
 #include <optional>
 #include <vector>
 
-namespace sf {
+namespace inframe {
 struct Face {
     double x{}, y{}, w{}, h{}, confidence{};
     double cx() const { return x + w * .5; }

@@ -4,7 +4,7 @@
 #include <random>
 #include <stdexcept>
 #define CHECK(x) do { if(!(x)) throw std::runtime_error(#x); } while(0)
-using namespace sf;
+using namespace inframe;
 Crop follow(Tracker &t,Settings s,Face f,double &time,int frames=600,double dt=1.0/60) {
     Crop c;
     for(int i=0;i<frames;++i) {time+=dt; t.observe({f},time,time,s); c=t.step(dt,time,s);}

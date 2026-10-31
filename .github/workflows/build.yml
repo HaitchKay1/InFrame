@@ -1,4 +1,4 @@
-name: Build SteadyFrame
+name: Build InFrame
 on:
   push:
   pull_request:
@@ -13,19 +13,19 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .deps
-          key: steadyframe-win2022-opencv412-obs3111-v1
+          key: inframe-win2022-opencv412-obs3111-v1
       - name: Build, test and package
         shell: pwsh
         run: ./scripts/build-windows.ps1 -Jobs 4
       - uses: actions/upload-artifact@v4
         with:
-          name: SteadyFrame-Windows-x64
-          path: SteadyFrame-0.1.0-Windows-x64.zip
+          name: InFrame-Windows-x64
+          path: InFrame-0.1.0-Windows-x64.zip
           if-no-files-found: error
   core-tests:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: cmake -S . -B build-core -DSTEADYFRAME_CORE_ONLY=ON
+      - run: cmake -S . -B build-core -DINFRAME_CORE_ONLY=ON
       - run: cmake --build build-core
       - run: ctest --test-dir build-core --output-on-failure

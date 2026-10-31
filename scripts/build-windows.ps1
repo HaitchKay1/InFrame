@@ -32,9 +32,10 @@ Run 'cmake' @('--install',$OpenCVBuild,'--config','Release')
 Run 'cmake' @('--preset','windows-x64',"-DOpenCV_DIR=$OpenCVInstall",'-DOpenCV_STATIC=ON','-DBUILD_TESTING=ON')
 Run 'cmake' @('--build','build_x64','--config','Release','--parallel',"$Jobs")
 Run 'ctest' @('--test-dir','build_x64','-C','Release','--output-on-failure')
-$Package = Join-Path $Root 'package'
+$Package = Join-Path $Root 'package-inframe'
+if (Test-Path $Package) { Remove-Item -LiteralPath $Package -Recurse -Force }
 Run 'cmake' @('--install','build_x64','--config','Release','--prefix',$Package)
-Copy-Item 'scripts/Install-SteadyFrame.ps1' $Package -Force
+Copy-Item 'scripts/Install-InFrame.ps1' $Package -Force
 Copy-Item 'scripts/Install.cmd' $Package -Force
 Copy-Item 'QUICKSTART.md','LICENSE','THIRD-PARTY.md' $Package -Force
 # Include the license of statically linked OpenCV, and template license attribution.
@@ -51,6 +52,6 @@ foreach ($Dependency in @('protobuf','flatbuffers','zlib')) {
         Copy-Item $_.FullName $Destination -Force
     }
 }
-$Zip = Join-Path $Root 'SteadyFrame-0.1.0-Windows-x64.zip'
+$Zip = Join-Path $Root 'InFrame-0.1.0-Windows-x64.zip'
 Compress-Archive -Path "$Package/*" -DestinationPath $Zip -Force
 Write-Host "Built $Zip"

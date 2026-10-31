@@ -5,11 +5,12 @@
 #include <util/platform.h>
 #include "detector.hpp"
 #include <atomic>
+#include <cstring>
 #include <memory>
 #include <mutex>
 
 OBS_DECLARE_MODULE()
-MODULE_EXPORT const char *obs_module_description(void) { return "SteadyFrame: smooth, local face-follow framing"; }
+MODULE_EXPORT const char *obs_module_description(void) { return "InFrame: smooth, local face-follow framing"; }
 namespace {
 double nowSeconds() { return double(os_gettime_ns())/1e9; }
 struct Filter {
@@ -17,11 +18,11 @@ struct Filter {
     gs_effect_t *effect=nullptr;
     gs_texrender_t *full=nullptr, *small=nullptr;
     gs_stagesurf_t *stage=nullptr;
-    std::unique_ptr<sf::Detector> detector;
+    std::unique_ptr<inframe::Detector> detector;
     std::mutex settingsMutex;
-    sf::Settings settings;
-    sf::Tracker tracker;
-    sf::Crop crop;
+    inframe::Settings settings;
+    inframe::Tracker tracker;
+    inframe::Crop crop;
     std::atomic<bool> freezeHotkey{false}, reset{false};
     obs_hotkey_id freezeKey=OBS_INVALID_HOTKEY_ID, resetKey=OBS_INVALID_HOTKEY_ID;
     uint32_t width=0,height=0,sw=0,sh=0;
@@ -29,9 +30,9 @@ struct Filter {
     bool rendered=false, staged=false, validTexture=false;
     double stagedAt=0, nextCapture=0, lastFrame=0, resizedAt=0;
 };
-const char *name(void *) {return "SteadyFrame — Face Tracking";}
+const char *name(void *) {return "InFrame — Face Tracking";}
 void update(void *data, obs_data_t *d) {
-    auto *f=static_cast<Filter*>(data); sf::Settings s;
+    auto *f=static_cast<Filter*>(data); inframe::Settings s;
     s.faceSize=std::clamp(obs_data_get_double(d,"face_size")/100,.15,.65);
     s.maxZoom=std::clamp(obs_data_get_double(d,"max_zoom"),1.0,4.0);
     s.manualZoom=std::clamp(obs_data_get_double(d,"manual_zoom"),1.0,4.0);
@@ -141,7 +142,7 @@ obs_properties_t *properties(void *data) {
     if(f && f->freezeHotkey) status+=" | Hotkey freeze ON";
     obs_properties_add_text(p,"status",status.c_str(),OBS_TEXT_INFO);
     obs_properties_add_button2(p,"refresh","Refresh detector status",refreshClicked,data);
-    obs_properties_add_text(p,"hotkeys","Optional hotkeys: OBS Settings > Hotkeys > SteadyFrame.\nHotkey freeze and the Freeze framing checkbox are independent; turn both off to resume.",OBS_TEXT_INFO);
+    obs_properties_add_text(p,"hotkeys","Optional hotkeys: OBS Settings > Hotkeys > InFrame.\nHotkey freeze and the Freeze framing checkbox are independent; turn both off to resume.",OBS_TEXT_INFO);
     return p;
 }
 void freeGraphics(Filter *f) {
@@ -166,13 +167,15 @@ void *create(obs_data_t *d,obs_source_t *source) {
     obs_leave_graphics(); bfree(path);
     if(!f->effect) {destroy(f); return nullptr;}
     path=obs_module_file("models/face_detection_yunet_2023mar.onnx");
-    try { f->detector=std::make_unique<sf::Detector>(path?path:""); }
-    catch(const std::exception &e) {blog(LOG_ERROR,"[SteadyFrame] %s",e.what()); bfree(path); destroy(f); return nullptr;}
+    try { f->detector=std::make_unique<inframe::Detector>(path?path:""); }
+    catch(const std::exception &e) {blog(LOG_ERROR,"[InFrame] %s",e.what()); bfree(path); destroy(f); return nullptr;}
     bfree(path); update(f,d);
-    f->freezeKey=obs_hotkey_register_source(source,"steadyframe.freeze","SteadyFrame: Toggle freeze framing",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){
+    // Retain saved hotkey bindings for scene collections created before the rename.
+    const bool legacy=std::strcmp(obs_source_get_id(source),"steadyframe_filter")==0;
+    f->freezeKey=obs_hotkey_register_source(source,legacy?"steadyframe.freeze":"inframe.freeze","InFrame: Toggle freeze framing",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){
         auto *f=static_cast<Filter*>(data); if(pressed) f->freezeHotkey=!f->freezeHotkey.load();
     },f);
-    f->resetKey=obs_hotkey_register_source(source,"steadyframe.reacquire","SteadyFrame: Find me again",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){if(pressed) static_cast<Filter*>(data)->reset=true;},f);
+    f->resetKey=obs_hotkey_register_source(source,legacy?"steadyframe.reacquire":"inframe.reacquire","InFrame: Find me again",[](void *data,obs_hotkey_id,obs_hotkey_t *,bool pressed){if(pressed) static_cast<Filter*>(data)->reset=true;},f);
     return f;
 }
 void tick(void *data,float) {static_cast<Filter*>(data)->rendered=false;}
@@ -195,7 +198,7 @@ void analyze(Filter *f,double now) {
         uint8_t *bytes=nullptr; uint32_t stride=0;
         if(gs_stagesurface_map(f->stage,&bytes,&stride)) {
             try {f->detector->submit(bytes,stride,int(f->sw),int(f->sh),f->stagedAt);}
-            catch(const std::exception &e) {blog(LOG_WARNING,"[SteadyFrame] frame copy failed: %s",e.what());}
+            catch(const std::exception &e) {blog(LOG_WARNING,"[InFrame] frame copy failed: %s",e.what());}
             gs_stagesurface_unmap(f->stage);
         }
         f->staged=false;
@@ -236,7 +239,7 @@ void render(void *data,gs_effect_t *) {
     }
     if(!f->full||!f->small||!f->stage) {obs_source_skip_video_filter(f->source); return;}
     if(!f->rendered) {
-        sf::Settings s; {std::lock_guard<std::mutex> lock(f->settingsMutex); s=f->settings;}
+        inframe::Settings s; {std::lock_guard<std::mutex> lock(f->settingsMutex); s=f->settings;}
         s.freeze=s.freeze||f->freezeHotkey.load();
         if(f->reset.exchange(false)) {f->tracker.forget(); f->resizedAt=now;}
         f->validTexture=capture(f,target,parent);
@@ -263,9 +266,14 @@ void render(void *data,gs_effect_t *) {
 }
 }
 bool obs_module_load(void) {
-    obs_source_info info={}; info.id="steadyframe_filter"; info.type=OBS_SOURCE_TYPE_FILTER;
+    obs_source_info info={}; info.id="inframe_filter"; info.type=OBS_SOURCE_TYPE_FILTER;
     info.output_flags=OBS_SOURCE_VIDEO; info.get_name=name; info.create=create; info.destroy=destroy;
     info.update=update; info.get_defaults=defaults; info.get_properties=properties;
     info.video_tick=tick; info.video_render=render;
-    obs_register_source(&info); return true;
+    obs_register_source(&info);
+    // Load existing saved filters without exposing a second entry in the Add Filter menu.
+    info.id="steadyframe_filter";
+    info.output_flags|=OBS_SOURCE_CAP_OBSOLETE;
+    obs_register_source(&info);
+    return true;
 }

@@ -7,7 +7,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
-namespace sf {
+namespace inframe {
 struct Detection { std::vector<Face> faces; double captured=0, milliseconds=0; uint64_t sequence=0; };
 class Detector {
     std::mutex mutex_;

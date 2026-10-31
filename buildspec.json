@@ -33,13 +33,13 @@
   },
   "platformConfig": {
     "macos": {
-      "bundleId": "org.steadyframe.obs"
+      "bundleId": "org.inframe.obs"
     }
   },
-  "name": "steadyframe",
-  "displayName": "SteadyFrame",
+  "name": "inframe",
+  "displayName": "InFrame",
   "version": "0.1.0",
-  "author": "SteadyFrame contributors",
-  "website": "",
+  "author": "InFrame contributors",
+  "website": "https://github.com/HaitchKay1/InFrame",
   "email": ""
 }

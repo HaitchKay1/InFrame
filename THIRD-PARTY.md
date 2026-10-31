@@ -1,6 +1,6 @@
 # Third-party components
 
-- SteadyFrame source: GPL-3.0-or-later, LICENSE.
+- InFrame source: GPL-3.0-or-later, LICENSE.
 - OBS Studio API and runtime: GPL-2.0-or-later. Plugin links libobs, using the GPLv3-or-later distribution option for compatibility with Apache-2.0 components. OBS itself is not redistributed in the Windows plugin package.
 - OBS official plugin template CMake support: MIT, LICENSE-OBS-TEMPLATE. Template commit `3e7d7ac3b5342cd7d9b88890b9c70b472d1520fc`; its OBS baseline is 31.1.1 and prebuilt dependency revision is 2025-07-11.
 - OpenCV 4.12.0: Apache-2.0. Windows builds link selected static OpenCV libraries; build script copies its LICENSE into the resulting package.
