@@ -1,0 +1,70 @@
+name: Publish InFrame 0.1.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: inframe-release-v0.1.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'release: publish InFrame 0.1.0'
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: '41170365693'
+      BUILD_SHA: de9539a489152f1d55741b3249b5c31bd82a091d
+      RELEASE_TAG: v0.1.0
+    steps:
+      - name: Verify successful build and download its Windows package
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" > run.json
+          jq -e --arg sha "$BUILD_SHA" '.head_sha == $sha and .head_branch == "main" and .event == "push" and .status == "completed" and .conclusion == "success" and .path == ".github/workflows/build.yml"' run.json
+          gh run download "$BUILD_RUN" --repo "$GH_REPO" --name InFrame-Windows-x64 --dir release-assets
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile, hashlib
+          package = Path("release-assets/InFrame-0.1.0-Windows-x64.zip")
+          with zipfile.ZipFile(package) as archive:
+              assert archive.testzip() is None, "Corrupt ZIP"
+              names = {n.replace("\\", "/").lower() for n in archive.namelist()}
+              required = {"install.cmd", "install-inframe.ps1", "inframe/bin/64bit/inframe.dll", "inframe/data/crop.effect", "inframe/data/models/face_detection_yunet_2023mar.onnx"}
+              assert required <= names, f"Missing files: {required - names}"
+          digest = hashlib.sha256(package.read_bytes()).hexdigest()
+          package.with_name("SHA256SUMS.txt").write_text(f"{digest}  {package.name}\n")
+          print(f"Verified {package.name}: {digest}")
+          PY
+      - name: Publish alpha release with verified assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > notes.md <<'NOTES'
+          First alpha release of InFrame, a native face-tracking filter for OBS Studio.
+
+          Features:
+          - Smooth face following with adjustable framing and zoom.
+          - Balanced, Responsive, and Cinematic presets.
+          - Freeze and reacquire controls, hotkeys, and tracking-loss behavior.
+          - Local YuNet face detection and GPU cropping; no camera images are uploaded.
+
+          Installation:
+          1. Download and extract InFrame-0.1.0-Windows-x64.zip.
+          2. Close OBS and run Install.cmd.
+          3. Open OBS > camera source > Filters > Effect Filters > InFrame — Face Tracking.
+
+          Windows x64. SDR only. This is an alpha intended for testing.
+
+          The Windows build and automated tests passed. The attached package is the existing artifact from build 41170365693 at commit de9539a489152f1d55741b3249b5c31bd82a091d.
+
+          InFrame was made with AI (ChatGPT/Codex), with human direction and testing.
+          NOTES
+          gh release create "$RELEASE_TAG" release-assets/InFrame-0.1.0-Windows-x64.zip release-assets/SHA256SUMS.txt --repo "$GH_REPO" --target "$BUILD_SHA" --title "InFrame 0.1.0 (Alpha)" --notes-file notes.md --prerelease --draft
+          gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --draft=false
+          gh release view "$RELEASE_TAG" --repo "$GH_REPO" --json url,tagName,isDraft,isPrerelease,assets
