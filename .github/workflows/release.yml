@@ -11,6 +11,18 @@ concurrency:
   group: inframe-release-v0.1.0
   cancel-in-progress: false
 jobs:
+  promote:
+    if: github.event_name == 'push' && github.event.head_commit.message == 'release promote InFrame 0.1.0'
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Mark the published version as the latest release
+        run: |
+          set -euo pipefail
+          gh release edit v0.1.0 --repo "$GH_REPO" --prerelease=false --latest
+          gh api "repos/$GH_REPO/releases/latest" --jq '.tag_name == "v0.1.0" and .draft == false and .prerelease == false' | grep -qx true
   publish:
     if: >-
       github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'release: publish InFrame 0.1.0'
